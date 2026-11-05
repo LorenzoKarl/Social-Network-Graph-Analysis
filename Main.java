@@ -1,123 +1,180 @@
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
+    private static final SocialGraph socialGraph = new SocialGraph();
+
+    // ANSI Color Constants for Terminal UI
+    public static final String RESET = "\u001B[0m";
+    public static final String CYAN = "\u001B[36m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String YELLOW = "\u001B[33m";
+    public static final String RED = "\u001B[31m";
+    public static final String BOLD = "\u001B[1m";
 
     public static void main(String[] args) {
-        SocialGraph network = new SocialGraph();
-        seedSampleData(network);
+        seedSampleData();
 
-        boolean running = true;
-        System.out.println("=================================================");
-        System.out.println("  SOCIAL NETWORK GRAPH ANALYTICS ENGINE (v1.0)  ");
-        System.out.println("=================================================");
-
-        while (running) {
-            printMenu();
-            System.out.print("Select an option [1-7]: ");
+        boolean exit = false;
+        while (!exit) {
+            printMainMenu();
             String input = scanner.nextLine().trim();
 
             switch (input) {
-                case "1":
-                    handleAddUser(network);
-                    break;
-                case "2":
-                    handleAddFriendship(network);
-                    break;
-                case "3":
-                    network.displayGraph();
-                    break;
-                case "4":
-                    handleShortestPath(network);
-                    break;
-                case "5":
-                    handleDegreeCentrality(network);
-                    break;
-                case "6":
-                    handleCommunityDetection(network);
-                    break;
-                case "7":
-                    running = false;
-                    System.out.println("\nExiting Graph Engine. Goodbye!");
+                case "1": handleAddUser(); break;
+                case "2": handleAddConnection(); break;
+                case "3": handleDisplayMatrix(); break;
+                case "4": handleAnimatedBFS(); break;
+                case "5": handleFindMostInfluential(); break;
+                case "6": handleDetectCommunities(); break;
+                case "7": handleFriendRecommendations(); break;
+                case "0":
+                    System.out.println("\n" + GREEN + "Exiting Social Network Engine. Goodbye!" + RESET);
+                    exit = true;
                     break;
                 default:
-                    System.out.println("\n[!] Invalid selection. Please enter a number from 1 to 7.");
+                    System.out.println("\n" + RED + "Invalid choice! Please select 0-7." + RESET);
             }
         }
         scanner.close();
     }
 
-    private static void printMenu() {
-        System.out.println("\n--- MAIN MENU ---");
-        System.out.println("1. Add New User Node");
-        System.out.println("2. Create Friendship Connection");
-        System.out.println("3. Display Full Network Topology");
-        System.out.println("4. Find Shortest Path (BFS Routing)");
-        System.out.println("5. View Most Influential User (Degree Centrality)");
-        System.out.println("6. Detect Sub-Communities (Connected Components)");
-        System.out.println("7. Exit System");
-        System.out.println("-----------------");
+    private static void printMainMenu() {
+        System.out.println("\n" + CYAN + "=========================================================" + RESET);
+        System.out.println(BOLD + "       SOCIAL NETWORK GRAPH ANALYTICS ENGINE (CLI v2.0)" + RESET);
+        System.out.println(CYAN + "=========================================================" + RESET);
+        System.out.println("1. Add New User");
+        System.out.println("2. Establish Connection (Add Friendship)");
+        System.out.println("3. Display Full Network (ASCII Matrix)");
+        System.out.println("4. Animated Shortest Path Search (BFS)");
+        System.out.println("5. Identify Most Influential User (Centrality)");
+        System.out.println("6. Detect Communities (Connected Subgraphs)");
+        System.out.println("7. Get Smart Friend Recommendations");
+        System.out.println("0. Exit Engine");
+        System.out.print(YELLOW + "Select option (0-7): " + RESET);
     }
 
-    private static void handleAddUser(SocialGraph network) {
-        System.out.print("Enter new user name: ");
-        String name = scanner.nextLine();
-        if (network.addUser(name)) {
-            System.out.println("[✓] User '" + name.trim() + "' added successfully.");
+    private static void handleAddUser() {
+        System.out.print("\nEnter user name (or '0' to Go Back): ");
+        String name = scanner.nextLine().trim();
+        if (name.equals("0") || name.isEmpty()) return;
+
+        if (socialGraph.addUser(name)) {
+            System.out.println(GREEN + "✓ User '" + name + "' registered successfully." + RESET);
         } else {
-            System.out.println("[!] Failed to add user. User may already exist or input was empty.");
+            System.out.println(RED + "✗ User '" + name + "' already exists." + RESET);
         }
     }
 
-    private static void handleAddFriendship(SocialGraph network) {
-        System.out.print("Enter first user name: ");
-        String user1 = scanner.nextLine();
-        System.out.print("Enter second user name: ");
-        String user2 = scanner.nextLine();
+    private static void handleAddConnection() {
+        System.out.print("\nEnter First User (or '0' to Go Back): ");
+        String u1 = scanner.nextLine().trim();
+        if (u1.equals("0") || u1.isEmpty()) return;
 
-        if (network.addFriendship(user1, user2)) {
-            System.out.println("[✓] Friendship created between '" + user1.trim() + "' and '" + user2.trim() + "'.");
+        System.out.print("Enter Second User (or '0' to Go Back): ");
+        String u2 = scanner.nextLine().trim();
+        if (u2.equals("0") || u2.isEmpty()) return;
+
+        if (socialGraph.addConnection(u1, u2)) {
+            System.out.println(GREEN + "✓ Connection established: " + u1 + " <---> " + u2 + RESET);
         } else {
-            System.out.println("[!] Connection failed. Ensure both users exist and are not already connected.");
+            System.out.println(RED + "✗ Failed to connect. Check if both users exist." + RESET);
         }
     }
 
-    private static void handleShortestPath(SocialGraph network) {
-        System.out.print("Enter starting user: ");
-        String start = scanner.nextLine();
-        System.out.print("Enter target user: ");
-        String target = scanner.nextLine();
-
-        // TODO: Assigned to BFS Subgroup
-        System.out.println("\n[Feature Pending] BFS pathfinding algorithm call goes here.");
+    private static void handleDisplayMatrix() {
+        socialGraph.displayAsciiMatrix();
+        promptToContinue();
     }
 
-    private static void handleDegreeCentrality(SocialGraph network) {
-        // TODO: Assigned to Centrality Subgroup
-        System.out.println("\n[Feature Pending] Degree Centrality calculation call goes here.");
-    }
+    private static void handleAnimatedBFS() {
+        System.out.print("\nEnter Source User (or '0' to Go Back): ");
+        String start = scanner.nextLine().trim();
+        if (start.equals("0") || start.isEmpty()) return;
 
-    private static void handleCommunityDetection(SocialGraph network) {
-        // TODO: Assigned to Community Detection Subgroup
-        System.out.println("\n[Feature Pending] Connected components clustering algorithm call goes here.");
-    }
+        System.out.print("Enter Target User (or '0' to Go Back): ");
+        String target = scanner.nextLine().trim();
+        if (target.equals("0") || target.isEmpty()) return;
 
-    private static void seedSampleData(SocialGraph network) {
-        String[] sampleUsers = {"Alice", "Bob", "Charlie", "David", "Eve", "Frank"};
-        for (String user : sampleUsers) {
-            network.addUser(user);
+        List<String> path = socialGraph.getShortestPathAnimated(start, target);
+        
+        System.out.print("\nCalculating metrics ");
+        renderProgressBar();
+
+        if (path.isEmpty()) {
+            System.out.println("\n" + RED + "NO PATH FOUND: '" + start + "' and '" + target + "' are disconnected." + RESET);
+        } else {
+            System.out.println("\n" + GREEN + BOLD + "SHORTEST PATH FOUND:" + RESET);
+            System.out.println("  " + String.join("  -->  ", path));
+            System.out.println("  Degrees of Separation: " + (path.size() - 1));
         }
+        promptToContinue();
+    }
 
-        String[][] connections = {
-            {"Alice", "Bob"},
-            {"Alice", "Charlie"},
-            {"Bob", "David"},
-            {"Charlie", "David"},
-            {"David", "Eve"}
-        };
-
-        for (String[] edge : connections) {
-            network.addFriendship(edge[0], edge[1]);
+    private static void handleFindMostInfluential() {
+        System.out.println("\n--- DEGREE CENTRALITY ANALYSIS ---");
+        String top = socialGraph.getMostInfluentialUser();
+        if (top != null) {
+            System.out.println("Most Central Node: " + GREEN + BOLD + top + RESET);
+        } else {
+            System.out.println(RED + "Network is currently empty." + RESET);
         }
+        promptToContinue();
+    }
+
+    private static void handleDetectCommunities() {
+        System.out.println("\n--- COMMUNITY DETECTION ---");
+        List<List<String>> communities = socialGraph.getCommunities();
+        System.out.println("Disjoint Subgraphs Found: " + BOLD + communities.size() + RESET);
+        for (int i = 0; i < communities.size(); i++) {
+            System.out.println("  Community Cluster #" + (i + 1) + ": " + YELLOW + communities.get(i) + RESET);
+        }
+        promptToContinue();
+    }
+
+    private static void handleFriendRecommendations() {
+        System.out.print("\nEnter User Name for Recommendations (or '0' to Go Back): ");
+        String user = scanner.nextLine().trim();
+        if (user.equals("0") || user.isEmpty()) return;
+
+        Map<String, Integer> recs = socialGraph.getFriendRecommendations(user);
+        System.out.println("\n--- MUTUAL FRIEND RECOMMENDATIONS FOR " + user.toUpperCase() + " ---");
+        if (recs.isEmpty()) {
+            System.out.println("No recommendations found.");
+        } else {
+            recs.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .forEach(e -> System.out.println("  User: " + BOLD + e.getKey() + RESET + " (" + e.getValue() + " mutual friend/s)"));
+        }
+        promptToContinue();
+    }
+
+    private static void renderProgressBar() {
+        System.out.print("[");
+        for (int i = 0; i < 20; i++) {
+            System.out.print("=");
+            try { Thread.sleep(25); } catch (InterruptedException ignored) {}
+        }
+        System.out.print("] 100%\n");
+    }
+
+    private static void promptToContinue() {
+        System.out.print("\nPress ENTER to return to main menu...");
+        scanner.nextLine();
+    }
+
+    private static void seedSampleData() {
+        socialGraph.addUser("Alice");
+        socialGraph.addUser("Bob");
+        socialGraph.addUser("Charlie");
+        socialGraph.addUser("David");
+        socialGraph.addUser("Eve");
+        socialGraph.addUser("Frank");
+
+        socialGraph.addConnection("Alice", "Bob");
+        socialGraph.addConnection("Alice", "Charlie");
+        socialGraph.addConnection("Bob", "David");
+        socialGraph.addConnection("Charlie", "David");
+        socialGraph.addConnection("David", "Eve");
     }
 }
